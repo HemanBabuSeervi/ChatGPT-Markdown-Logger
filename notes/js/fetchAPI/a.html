@@ -1,0 +1,55 @@
+<head>
+	<link rel="stylesheet" href="/home/heman/notes/themes/atelier-heath.min.css" />
+	<link rel="stylesheet" href="/home/heman/notes/style.css" />
+</head>
+<p>Generating a foreground mask involves creating an image where the
+foreground is highlighted and the background is masked out. Here are
+several methods to generate the mask:</p>
+<h3 id="using-opencv-for-static-backgrounds">1. <strong>Using OpenCV for
+Static Backgrounds</strong></h3>
+<p>If you have a static background (<code>background.jpg</code>) and a
+foreground image (<code>foreground.jpg</code>), you can use background
+subtraction techniques in OpenCV:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> cv2</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Load images</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>background <span class="op">=</span> cv2.imread(<span class="st">&#39;background.jpg&#39;</span>)</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>foreground <span class="op">=</span> cv2.imread(<span class="st">&#39;foreground.jpg&#39;</span>)</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Convert to grayscale</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>background_gray <span class="op">=</span> cv2.cvtColor(background, cv2.COLOR_BGR2GRAY)</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>foreground_gray <span class="op">=</span> cv2.cvtColor(foreground, cv2.COLOR_BGR2GRAY)</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="co"># Compute absolute difference between the two images</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>diff <span class="op">=</span> cv2.absdiff(background_gray, foreground_gray)</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a><span class="co"># Threshold the difference image to create a binary mask</span></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>_, mask <span class="op">=</span> cv2.threshold(diff, <span class="dv">30</span>, <span class="dv">255</span>, cv2.THRESH_BINARY)</span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a><span class="co"># Save the mask</span></span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>cv2.imwrite(<span class="st">&#39;foreground-mask.png&#39;</span>, mask)</span></code></pre></div>
+<h3 id="using-chroma-keying-green-screen">2. <strong>Using Chroma Keying
+(Green Screen)</strong></h3>
+<p>If the background is a solid color (like a green screen), you can use
+color thresholding:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> cv2</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Load the foreground image</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>foreground <span class="op">=</span> cv2.imread(<span class="st">&#39;foreground.jpg&#39;</span>)</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Convert to HSV color space</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>hsv <span class="op">=</span> cv2.cvtColor(foreground, cv2.COLOR_BGR2HSV)</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Define the range of green color in HSV</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>lower_green <span class="op">=</span> np.array([<span class="dv">35</span>, <span class="dv">40</span>, <span class="dv">40</span>])</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>upper_green <span class="op">=</span> np.array([<span class="dv">85</span>, <span class="dv">255</span>, <span class="dv">255</span>])</span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a><span class="co"># Create a binary mask where green colors are detected</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>mask <span class="op">=</span> cv2.<span class="kw">in</span></span></code></pre></div>
+<script src="/home/heman/notes/script.js"></script>
+<script src="/home/heman/notes/highlight.min.js"></script>
+<script>console.log(hljs); hljs.highlightAll();</script>
